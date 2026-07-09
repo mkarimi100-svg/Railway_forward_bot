@@ -1,32 +1,41 @@
 import os
 import telebot
 import time
+import sys
 
-# خواندن توکن از متغیرهای محیطی Railway
+# ۱. دریافت تنظیمات از محیط Railway
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+CHANNEL_ID = '-1004384751215'
 
-# اگر توکن پیدا نشد، برنامه متوقف شود تا خطا در لاگ‌ها مشخص شود
+# بررسی وجود توکن
 if not BOT_TOKEN:
     print("❌ Error: BOT_TOKEN not found in environment variables!")
-    exit(1)
+    sys.exit(1)
 
 bot = telebot.TeleBot(BOT_TOKEN)
-CHANNEL_ID = '-1004384751215' # آیدی کانال شما
 
-print("🚀 Bot is starting up...")
-
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "سلام! ربات با موفقیت در Railway فعال شد. 😊")
-
-# در اینجا کدهای اصلی خودت (مثل فوروارد کردن پیام‌ها) را قرار بده
-
-print("✅ Bot is running and polling...")
-
-# استفاده از infinity_polling برای پایداری بالا در برابر قطع شدن اینترنت
-while True:
+# ۲. هندلر فوروارد کردن پیام‌ها
+@bot.message_handler(func=lambda message: True)
+def forward_to_channel(message):
     try:
-        bot.infinity_polling(timeout=60, long_polling_timeout=60)
+        # فوروارد پیام به کانال
+        bot.forward_message(CHANNEL_ID, message.chat.id, message.message_id)
+        print(f"📨 Message forwarded from {message.chat.id}")
     except Exception as e:
-        print(f"⚠️ Connection error: {e}. Retrying in 5 seconds...")
-        time.sleep(5)
+        print(f"⚠️ Error during forwarding: {e}")
+
+# ۳. اجرای اصلی ربات با ساختار ضد خاموش شدن
+def run_bot():
+    print("🚀 Bot is starting up and polling...")
+    while True:
+        try:
+            # استفاده از infinity_polling با تنظیمات پایدار
+            bot.infinity_polling(timeout=60, long_polling_timeout=60)
+        except Exception as e:
+            print(f"⚠️ Connection error: {e}")
+            print("⏳ Restarting in 10 seconds...")
+            time.sleep(10) # مکث کوتاه برای جلوگیری از فشار به سرور در صورت قطعی
+
+if __name__ == "__main__":
+    print("✅ Bot script initialized successfully.")
+    run_bot()
