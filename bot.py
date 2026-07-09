@@ -5,7 +5,7 @@ import sys
 
 # ۱. دریافت تنظیمات از محیط Railway
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-CHANNEL_ID = '-1004384751215'
+CHANNEL_ID = '@forward_test'
 
 # بررسی وجود توکن
 if not BOT_TOKEN:
