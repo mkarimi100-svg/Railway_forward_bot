@@ -5,47 +5,42 @@ import sys
 
 # ۱. دریافت تنظیمات از محیط Railway
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-raw_channel_id = os.getenv('CHANNEL_ID')
-CHANNEL_ID = -100123456789  # <--- دقت کنید: بدون علامت ' ' یا " "
+# حتماً دقت کنید که آیدی عددی باشد و با -100 شروع شود
+# اگر در Railway ست کردید، این خط را تغییر ندهید اما مطمئن شوید در Railway عدد است
+CHANNEL_ID = int(os.getenv('CHANNEL_ID')) if os.getenv('CHANNEL_ID') else -100123456789 
 
-# دریافت از محیط Railway و تبدیل اجباری به عدد صحیح (int)
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-raw_channel_id = os.getenv('CHANNEL_ID')
-
-if not BOT_TOKEN or not raw_channel_id:
-    print("❌ Error: BOT_TOKEN or CHANNEL_ID not found in environment variables!")
-    sys.exit(1)
-
-# تبدیل رشته‌ی دریافتی از محیط Railway به عدد صحیح
-try:
-    CHANNEL_ID = int(raw_channel_id)
-except ValueError:
-    print(f"❌ Error: CHANNEL_ID '{raw_channel_id}' must be a number (e.g., -100123456789)")
+if not BOT_TOKEN:
+    print("❌ Error: BOT_TOKEN not found in environment variables!")
     sys.exit(1)
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# ۲. هندلر فوروارد کردن پیام‌ها
+# ۲. هندلر هوشمند برای کپی کردن تمام انواع پیام‌ها
 @bot.message_handler(func=lambda message: True)
-def forward_to_channel(message):
+def copy_to_channel(message):
     try:
-        # فوروارد پیام به کانال
-        bot.forward_message(CHANNEL_ID, message.chat.id, message.message_id)
-        print(f"📨 Message forwarded from {message.chat.id}")
+        # استفاده از copy_message به جای forward_message
+        # این متد تمام محتوا (عکس، ویدیو، متن، کپشن) را دقیقاً کپی می‌کند
+        bot.copy_message(
+            chat_id=CHANNEL_ID, 
+            from_chat_id=message.chat.id, 
+            message_id=message.message_id
+        )
+        print(f"✅ Message (Type: {message.content_type}) copied from {message.chat.id} to {CHANNEL_ID}")
+        
     except Exception as e:
-        print(f"⚠️ Error during forwarding: {e}")
+        print(f"⚠️ Error during copying: {e}")
 
-# ۳. اجرای اصلی ربات با ساختار ضد خاموش شدن
+# ۳. اجرای اصلی ربات
 def run_bot():
-    print("🚀 Bot is starting up and polling...")
+    print(f"🚀 Bot is starting... Targeting Channel: {CHANNEL_ID}")
     while True:
         try:
-            # استفاده از infinity_polling با تنظیمات پایدار
             bot.infinity_polling(timeout=60, long_polling_timeout=60)
         except Exception as e:
             print(f"⚠️ Connection error: {e}")
             print("⏳ Restarting in 10 seconds...")
-            time.sleep(10) # مکث کوتاه برای جلوگیری از فشار به سرور در صورت قطعی
+            time.sleep(10)
 
 if __name__ == "__main__":
     print("✅ Bot script initialized successfully.")
