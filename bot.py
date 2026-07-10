@@ -5,11 +5,22 @@ import sys
 
 # ۱. دریافت تنظیمات از محیط Railway
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-CHANNEL_ID = '@forward_test'
+raw_channel_id = os.getenv('CHANNEL_ID')
+CHANNEL_ID = -100123456789  # <--- دقت کنید: بدون علامت ' ' یا " "
 
-# بررسی وجود توکن
-if not BOT_TOKEN:
-    print("❌ Error: BOT_TOKEN not found in environment variables!")
+# دریافت از محیط Railway و تبدیل اجباری به عدد صحیح (int)
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+raw_channel_id = os.getenv('CHANNEL_ID')
+
+if not BOT_TOKEN or not raw_channel_id:
+    print("❌ Error: BOT_TOKEN or CHANNEL_ID not found in environment variables!")
+    sys.exit(1)
+
+# تبدیل رشته‌ی دریافتی از محیط Railway به عدد صحیح
+try:
+    CHANNEL_ID = int(raw_channel_id)
+except ValueError:
+    print(f"❌ Error: CHANNEL_ID '{raw_channel_id}' must be a number (e.g., -100123456789)")
     sys.exit(1)
 
 bot = telebot.TeleBot(BOT_TOKEN)
